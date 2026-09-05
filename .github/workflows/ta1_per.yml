@@ -46,7 +46,7 @@ jobs:
           # Simulación del comando de testing del proyecto
           # docker run --network host -e DB_HOST=localhost freelancehub/backend:test npm run test
 
-deploy:
+  deploy:
     name: Despliegue Simulado
     needs: build-and-test
     runs-on: ubuntu-latest

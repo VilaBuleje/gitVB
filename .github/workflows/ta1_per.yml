@@ -1,0 +1,77 @@
+name: CI/CD Pipeline - FreelanceHub Perú
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Compilación y Pruebas
+    runs-on: ubuntu-latest
+    
+    # Servicio temporal de base de datos para pruebas de integración
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: freelancehub_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen Docker local
+        run: docker build -t freelancehub/backend:test .
+
+      - name: Ejecutar pruebas automatizadas
+        env:
+          DB_HOST: localhost
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+        run: |
+          echo "Ejecutando pruebas unitarias y de integración contra PostgreSQL efímero..."
+          # Simulación del comando de testing del proyecto
+          # docker run --network host -e DB_HOST=localhost freelancehub/backend:test npm run test
+
+  deploy:
+    name: Despliegue Simulado
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesión en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USUARIO }}
+          password: ${{ secrets.DOCKER_CONTRA }}
+
+      - name: Subir imagen validada al registro
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: tuusuario/freelancehub-backend:latest
+
+      - name: Simular despliegue en servidor de pre-producción (Staging)
+        run: |
+          echo "Iniciando conexión segura con el servidor Cloud..."
+          echo "Haciendo pull de tuusuario/freelancehub-backend:latest..."
+          echo "Realizando intercambio de contenedores (Zero Downtime)..."
+          echo "Despliegue simulado exitoso."
+          echo test, and deploy your project.
